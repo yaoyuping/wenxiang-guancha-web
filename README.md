@@ -2,7 +2,9 @@
 
 基于用户提供的微信小程序 **V1.23.0-rc.1** 迁移的静态网页版，适配手机和电脑，部署到 GitHub Pages。
 
-网站：https://yaoyuping.github.io/wenxiang-guancha-web/
+目标网址：https://yaoyuping.github.io/wenxiang-guancha-web/
+
+当前源码、测试与构建已完成；首次发布待仓库管理员在 Settings → Pages 将 Source 设为 GitHub Actions。
 
 ## 已迁移
 

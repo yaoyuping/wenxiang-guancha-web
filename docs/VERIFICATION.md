@@ -34,3 +34,7 @@ GitHub Pages 仅提供静态内容。个人资料保留在浏览器，不提供�
 ## 重复执行浏览器验证
 
 在一个终端运行 `npm run build && npm run serve`，另一个终端先安装 Chromium（`npx playwright install chromium`），然后运行 `npm run test:browser`。也可用 `BROWSER_EXECUTABLE=/usr/bin/chromium npm run test:browser` 指定已安装的浏览器。测试使用全新的浏览器上下文与合成记录，不写真实个人数据；报告保存到被 Git 忽略的 `test-results/`。
+
+## GitHub 自动构建
+
+提交 `d31c22d` 的 [GitHub Actions 运行](https://github.com/yaoyuping/wenxiang-guancha-web/actions/runs/44730013720) 已通过 `npm ci`、`npm test` 和 `npm run build`。发布停在 `actions/configure-pages`，仓库 Pages 尚未启用；当前连接调用启用接口返回 `Resource not accessible by integration`（HTTP 403）。管理员在 Settings → Pages 将 Source 设为 GitHub Actions 后，重新运行工作流即可继续发布。
