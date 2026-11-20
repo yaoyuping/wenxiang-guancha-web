@@ -37,4 +37,6 @@ GitHub Pages 仅提供静态内容。个人资料保留在浏览器，不提供�
 
 ## GitHub 自动构建
 
-提交 `d31c22d` 的 [GitHub Actions 运行](https://github.com/yaoyuping/wenxiang-guancha-web/actions/runs/44730013720) 已通过 `npm ci`、`npm test` 和 `npm run build`。发布停在 `actions/configure-pages`，仓库 Pages 尚未启用；当前连接调用启用接口返回 `Resource not accessible by integration`（HTTP 403）。管理员在 Settings → Pages 将 Source 设为 GitHub Actions 后，重新运行工作流即可继续发布。
+提交 `2302582` 的 [GitHub Actions 运行](https://github.com/yaoyuping/wenxiang-guancha-web/actions/runs/44730611775) 已完成 `npm ci`、`npm test`、`npm run build`、Pages 配置、构建产物上传与正式发布，build 和 deploy 均为 success。Pages Source 为 GitHub Actions，强制 HTTPS 已启用。
+
+补充验证：以 `/wenxiang-guancha-web/` 仓库子路径启动相同构建产物，文章直达链接、相对图片路径、刷新和 Service Worker 注册均通过。当前执行环境的网络策略拒绝直接访问 github.io，线上发布成功依据 GitHub 部署记录，未将本机验证表述为线上浏览器验证。
