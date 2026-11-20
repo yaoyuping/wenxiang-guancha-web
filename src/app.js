@@ -142,8 +142,22 @@ function card(e) {
 function sectionHead(kicker, title, sub = "", right = "") {
   return `<div class="section-heading"><div><div class="eyebrow">${esc(kicker)}</div><h1>${esc(title)}</h1>${sub ? `<p>${esc(sub)}</p>` : ""}</div>${right}</div>`;
 }
+function functionCards(items, cls = "") {
+  return `<div class="function-grid ${cls}">${items.map(([href, title, text, art, featured]) => `<a class="function-card${featured ? " featured" : ""}" href="${esc(href)}"><img src="assets/images/handpainted/${art}.webp" alt="" loading="lazy"><div class="function-copy"><strong>${esc(title)}</strong><span>${esc(text)}</span></div><span class="function-arrow" aria-hidden="true">↗</span></a>`).join("")}</div>`;
+}
+function illustratedEmpty(art, title, text, href, action) {
+  return `<div class="illustrated-empty">${illustration(art)}<div><h3>${esc(title)}</h3><p>${esc(text)}</p><a class="text-link" href="${href}">${esc(action)} →</a></div></div>`;
+}
 function shell() {
   const current = location.hash.slice(1).split("/")[0] || "home";
+  const active =
+    {
+      backup: "my",
+      glossary: "my",
+      review: "my",
+      item: "collection",
+      batch: "collection",
+    }[current] || current;
   const nav = [
     ["home", "书房"],
     ["tea", "茶学"],
@@ -160,17 +174,17 @@ function shell() {
     navigate("#search/" + encodeURIComponent(new FormData(e.target).get("q")));
   };
   $("#sidebar").innerHTML =
-    `<div class="sidebar-label">香 茶 书 房</div>${nav.map(([p, n]) => `<a href="#${p}" class="${current === p ? "active" : ""}"><span>${n}</span><span>↗</span></a>`).join("")}<div class="sidebar-foot"><p>静坐听风<br>闲来闻香</p><small>网页版 1.23.1<br>资料与时光，留在身边。</small><a href="#backup">备份与恢复 →</a></div>`;
+    `<div class="sidebar-label">香 茶 书 房</div>${nav.map(([p, n]) => `<a href="#${p}" class="${current === p ? "active" : ""}"><span>${n}</span><span>↗</span></a>`).join("")}<div class="sidebar-foot"><p>静坐听风<br>闲来闻香</p><small>网页版 1.23.2<br>资料与时光，留在身边。</small><a href="#backup">备份与恢复 →</a></div>`;
   $("#mobile-nav").innerHTML = [
-    ["home", "书房"],
-    ["tea", "茶学"],
-    ["incense", "香学"],
-    ["collection", "珍藏"],
-    ["my", "我的"],
+    ["home", "书房", "books"],
+    ["tea", "茶学", "tea-sprig"],
+    ["incense", "香学", "incense-burner"],
+    ["collection", "珍藏", "storage"],
+    ["my", "我的", "incense-journal"],
   ]
     .map(
-      ([p, n]) =>
-        `<a href="#${p}" class="${current === p ? "active" : ""}">${n}</a>`,
+      ([p, n, art]) =>
+        `<a href="#${p}" class="${active === p ? "active" : ""}" ${active === p ? 'aria-current="page"' : ""}><img src="assets/images/handpainted/${art}.webp" alt=""><span>${n}</span></a>`,
     )
     .join("");
 }
@@ -186,7 +200,18 @@ async function home() {
     .sort((a, b) =>
       String(b[1].updatedAt).localeCompare(String(a[1].updatedAt)),
     )[0];
-  main.innerHTML = `<div class="home-top"><span class="eyebrow">香 茶 日 常 / WENXIANG GUANCHA</span><span>${new Date().toLocaleDateString("zh-CN", { month: "long", day: "numeric", weekday: "long" })}</span></div><section class="hero"><div class="hero-copy"><div class="eyebrow">以香静心 · 以茶观物</div><h1>把日子，<br>泡得慢一些。</h1><p>从一片叶、一缕香开始。<br>读懂来处，认真感受，留下自己的观察。</p><div class="button-row"><a class="button primary" href="${recent ? url(recent[0]) : "#tea"}">${recent ? "继续上次阅读" : "从一杯茶开始"} <span>→</span></a><a class="text-link" href="#journal">记下此刻 ↗</a></div></div><div class="hero-art">${illustration("home-tea")}<span>闲坐有味，草木有情。</span></div><span class="hero-index">01 / 香茶书房</span></section><div class="stats-strip"><div><strong>12</strong><span>香茶单元</span></div><div><strong>87</strong><span>课程与回顾</span></div><div><strong>36</strong><span>关联图鉴</span></div><div><strong>${read}</strong><span>已经读过</span></div></div><div class="section-heading small"><div><div class="eyebrow">循 序 入 门</div><h2>今日，从这里开始</h2></div><a class="text-link" href="#library">全部内容 ↗</a></div><div class="card-grid">${["T-U01-L01", "I-U01-L01", "K-TEA-GAIWAN"].map((id) => card(meta(id))).join("")}</div><section class="journal-invite"><div><span class="eyebrow">清 赏 手 记</span><h2>感受不必标准，真实就好。</h2><p>记一泡茶的香气、一炉香的变化，或今天的小事。</p><a class="text-link" href="#journal">打开我的手记 →</a></div>${illustration("incense-journal")}</section><p class="quiet-note">个人记录仅存于当前浏览器。建议定期到「备份与恢复」下载备份，换设备时再导入。</p>`;
+  main.innerHTML = `<div class="home-top"><span class="eyebrow">香 茶 日 常 <span class="home-english">/ WENXIANG GUANCHA</span></span><span>${new Date().toLocaleDateString("zh-CN", { month: "long", day: "numeric", weekday: "long" })}</span></div>
+    <section class="hero"><div class="hero-copy"><div class="eyebrow">以香静心 · 以茶观物</div><h1>把日子，<br>泡得慢一些。</h1></div><div class="hero-art">${illustration("home-tea")}<span>闲坐有味，草木有情。</span></div><p class="hero-description">从一片叶、一缕香开始。<br>读懂来处，认真感受，留下自己的观察。</p><div class="button-row hero-actions"><a class="button primary" href="${recent ? url(recent[0]) : "#tea"}">${recent ? "继续上次阅读" : "从一杯茶开始"} <span>→</span></a><a class="text-link" href="#journal">记下此刻 ↗</a></div><span class="hero-index">01 / 香茶书房</span></section>
+    <div class="stats-strip"><div><strong>12</strong><span>香茶单元</span></div><div><strong>87</strong><span>课程与回顾</span></div><div><strong>36</strong><span>关联图鉴</span></div><div><strong>${read}</strong><span>已经读过</span></div></div><div class="section-heading small"><div><div class="eyebrow">循 序 入 门</div><h2>今日，从这里开始</h2></div><a class="text-link" href="#library">全部内容 ↗</a></div><div class="card-grid home-courses">${["T-U01-L01", "I-U01-L01", "K-TEA-GAIWAN"].map((id) => card(meta(id))).join("")}</div>
+    <section class="journal-invite"><div><span class="eyebrow">清 赏 手 记</span><h2>感受真实，就很好。</h2><p>记一泡茶的香气，或一炉香的变化。</p><a class="text-link" href="#journal">打开我的手记 →</a></div>${illustration("incense-journal")}</section>
+    <div class="section-heading small"><div><div class="eyebrow">书 房 小 事</div><h2>喜欢的，都有安放处</h2></div></div>${functionCards(
+      [
+        ["#atlas", "草木图鉴", "认一味香，识一片叶", "tea-sprig"],
+        ["#collection", "我的珍藏", "为茶、香与器物建档", "storage"],
+        ["#review", "复习与进阶", "温故一遍，再读深一些", "tea-assessment"],
+        ["#backup", "备份与恢复", "把记录妥善留住", "books"],
+      ],
+    )}<p class="quiet-note">个人记录仅存于当前浏览器。建议定期到「备份与恢复」下载备份，换设备时再导入。</p>`;
 }
 function unitsPage(series) {
   const units = index.units.filter((u) => u.series === series);
@@ -194,13 +219,25 @@ function unitsPage(series) {
     sectionHead(
       series === "tea" ? "TEA STUDIES" : "INCENSE STUDIES",
       series === "tea" ? "循着一片叶，读懂茶。" : "循着一缕香，认识草木。",
-      "六个单元，慢慢读；每一课都保留原文、配图与出处。",
+      "六个单元，慢慢读；保留每一课的原文、配图与出处。",
       illustration(
         series === "tea" ? "gaiwan" : "incense-burner",
         "heading-art",
       ),
     ) +
-    `<div class="unit-grid">${units.map((u, i) => `<a class="unit-card" href="#unit/${u.id}"><span class="unit-number">0${i + 1}</span><div><span class="eyebrow">${u.id} · ${u.lesson_count} 课</span><h2>${esc(u.title)}</h2><p>${esc(u.description)}</p><span class="text-link">进入单元 →</span></div><img src="${asset(meta(u.lesson_ids[0]).hero)}" alt="${esc(u.title)}手绘意象"></a>`).join("")}</div><div class="button-row"><a class="button" href="#atlas/${series}">查看${label[series]}学图鉴</a><a class="button" href="#library/${series}">原版课程与进阶资料</a><a class="button" href="#glossary">术语索引</a><a class="button" href="#review">复习与进阶</a></div>`;
+    `<div class="unit-grid">${units.map((u, i) => `<a class="unit-card" href="#unit/${u.id}"><div class="unit-meta"><span class="unit-number">0${i + 1}</span><span class="eyebrow">${u.id} · ${u.lesson_count} 课</span></div><div class="unit-copy"><h2>${esc(u.title)}</h2><p>${esc(u.description)}</p><span class="text-link">进入单元 <span aria-hidden="true">→</span></span></div><img src="${asset(meta(u.lesson_ids[0]).hero)}" alt="${esc(u.title)}手绘意象" loading="lazy"></a>`).join("")}</div><div class="section-heading small"><div><div class="eyebrow">再 翻 一 页</div><h2>读过之后，继续探索</h2></div></div>${functionCards(
+      [
+        [
+          "#atlas/" + series,
+          label[series] + "学图鉴",
+          "循着图画，认识草木器物",
+          series === "tea" ? "gaiwan" : "herbs",
+        ],
+        ["#library/" + series, "课程书架", "原版课程与进阶资料", "books"],
+        ["#glossary", "术语索引", "给所见所闻一个名字", "tea-canon"],
+        ["#review", "复习与进阶", "带着问题，回看一遍", "tea-assessment"],
+      ],
+    )}`;
 }
 function unitPage(id) {
   const u = index.units.find((x) => x.id === id);
@@ -1144,14 +1181,13 @@ async function exportBackup() {
   toast("已生成并校验备份，请在下载目录确认文件并另存到 iCloud。");
 }
 function backupPage() {
-  main.innerHTML =
-    sectionHead(
-      "BACKUP & RESTORE",
-      "把记录，妥善留住。",
-      "当前浏览器保存，备份文件随你带走。",
-    ) +
-    statCards(counts(state)) +
-    `<div class="backup-grid"><section class="panel"><span class="step-number">01</span><h2>导出完整网页备份</h2><p>包含个人记录、库存流水、网页添加的照片原件，以及已保存的草稿。文件经完整性校验后下载。</p><button class="primary" id="export-backup">下载完整备份</button><p class="muted">下载后，请手动另存到 iCloud Drive 或自己的备份目录。没有自动 iCloud 同步。</p></section><section class="panel"><span class="step-number">02</span><h2>导入与迁移</h2><p>支持网页备份、小程序 V1/V2/V3/V4 文字备份及本机珍藏文件。先预览，再确认，只补缺失记录。</p><label class="button file-label">选择 JSON 备份<input id="backup-file" type="file" accept="application/json,.json"></label><p class="muted">小程序备份不含照片原件。图像说明保留，原图需另行添加。</p></section></div><section id="import-preview" aria-live="polite"></section><section class="panel backup-about"><h2>资料存在哪里</h2><p>个人资料存在当前设备、当前浏览器的网站存储中，不会上传到 GitHub。清除网站数据、无痕模式结束或更换浏览器，可能使本机记录不可用。请定期导出，并在更换设备前确认备份可读。</p><p>网页版不连接微信 CloudBase，也不自动读取微信身份或云端资料。迁移时使用你自己导出的备份；导入校验确认文件完整性，不能代替微信身份认证。</p><button id="request-persistence">请求浏览器保留本机数据</button><p id="persist-status" class="muted"></p></section>`;
+  main.innerHTML = `<a class="back" href="#my">← 我的书房</a><section class="personal-cover backup-cover"><div><div class="eyebrow">BACKUP & RESTORE</div><h1>把记录，妥善留住。</h1><p>一份留在书房，一份随身带走。</p><span class="local-tag"><i></i>当前浏览器 · 本机保存</span></div>${illustration("storage")}</section>
+    <details class="backup-inventory"><summary>查看本机资料数量<span>珍藏 · 手记 · 笔记 · 照片</span></summary>${statCards(counts(state))}</details>
+    <div class="backup-grid"><section class="panel backup-card export-card"><div class="backup-card-top"><div><span class="eyebrow">SAVE A COPY</span><h2>存一份，安心留底</h2></div>${illustration("books")}</div><p>完整保存个人记录、库存流水、网页照片原件和已保存的草稿。</p><button class="primary" id="export-backup">下载完整备份 <span aria-hidden="true">↓</span></button><p class="backup-footnote">文件经完整性校验后下载，再手动另存到 iCloud Drive 或自己的备份目录。</p></section>
+    <section class="panel backup-card import-card"><div class="backup-card-top"><div><span class="eyebrow">BRING IT BACK</span><h2>带回来，接着记录</h2></div>${illustration("incense-journal")}</div><p>导入网页或小程序 JSON 备份。先预览，再确认，只补回缺失的记录。</p><label class="button file-label">选择 JSON 备份 <span aria-hidden="true">↑</span><input id="backup-file" type="file" accept="application/json,.json"></label><p class="backup-footnote">支持小程序 V1–V4 文字备份与本机珍藏文件；小程序照片原件需另行添加。</p></section></div>
+    <section id="import-preview" aria-live="polite"></section>
+    <section class="backup-guide"><div class="section-heading small"><div><div class="eyebrow">一 个 小 习 惯</div><h2>换设备前，做这三步</h2></div></div><ol><li><span>01</span><div><strong>下载一份</strong><p>记录更新后，导出最新的完整备份。</p></div></li><li><span>02</span><div><strong>另存一处</strong><p>确认下载文件，再放进自己的云盘或文件夹。</p></div></li><li><span>03</span><div><strong>在新设备接着用</strong><p>打开本站，选择备份，预览后确认导入。</p></div></li></ol></section>
+    <section class="panel backup-about"><div class="backup-about-title">${illustration("tea-sprig")}<div><span class="eyebrow">留 在 自 己 手 中</span><h2>资料存在哪里</h2></div></div><p>个人资料保存在当前设备、当前浏览器中，不会上传到 GitHub，也不会自动同步到 iCloud。清除网站数据、结束无痕模式或更换浏览器，可能使本机记录不可用。</p><details><summary>关于小程序迁移</summary><p>网页版不连接微信 CloudBase，也不自动读取微信身份或云端资料。请使用自己导出的备份迁移；文件完整性校验不能代替微信身份认证。</p></details><button id="request-persistence">请求浏览器保留本机数据</button><p id="persist-status" class="muted" aria-live="polite"></p></section>`;
   $("#export-backup").onclick = async () => {
     try {
       await exportBackup();
@@ -1218,14 +1254,25 @@ function myPage() {
   ]
     .map(meta)
     .filter(Boolean);
-  main.innerHTML =
-    sectionHead(
-      "MY STUDY",
-      "一页页，积成自己的书。",
-      "读过的、喜欢的、记下的，都在这里。",
-    ) +
-    statCards(counts(state)) +
-    `<div class="button-row"><a class="button primary" href="#backup">备份与恢复</a><a class="button" href="#journal">清赏手记</a><a class="button" href="#library">全部书架</a><a class="button" href="#glossary">术语索引</a><a class="button" href="#review">复习与进阶</a></div><h2>我的收藏</h2><div class="card-grid">${bookmarks.map(card).join("") || '<p class="muted">阅读时点一下「收藏」，把喜欢的内容留在这里。</p>'}</div><h2>读书笔记</h2>${notesFor()}<details class="source-panel"><summary>最近的作答记录</summary>${
+  main.innerHTML = `<section class="study-overview"><div class="personal-cover"><div><div class="eyebrow">MY STUDY</div><h1>我的香茶书房</h1><p>读过的、喜欢的、记下的，<br>都在这里慢慢积累。</p></div>${illustration("books")}</div>${statCards(counts(state))}</section>
+    ${functionCards(
+      [
+        [
+          "#backup",
+          "备份与恢复",
+          "为积累留个底，换设备也能带走",
+          "storage",
+          true,
+        ],
+        ["#journal", "清赏手记", "记下今天的香与茶", "incense-journal"],
+        ["#library", "全部书架", "找一页喜欢的，慢慢读", "books"],
+        ["#glossary", "术语索引", "读懂草木与器物的名字", "tea-canon"],
+        ["#review", "复习与进阶", "回看一遍，再理解一点", "tea-assessment"],
+      ],
+      "my-tools",
+    )}
+    <div class="section-heading small"><div><div class="eyebrow">留 下 喜 欢</div><h2>我的收藏</h2></div><a class="text-link" href="#library">去书架 ↗</a></div>${bookmarks.length ? `<div class="card-grid">${bookmarks.map(card).join("")}</div>` : illustratedEmpty("tea-sprig", "把心动的一页，留在这里", "阅读时点一下「收藏」，下次就能轻松找到。", "#tea", "去读一页茶")}
+    <div class="section-heading small"><div><div class="eyebrow">字 里 行 间</div><h2>读书笔记</h2></div></div>${state.learning.notes.length || state.extra.notes.length ? notesFor() : illustratedEmpty("incense-journal", "留一句自己的理解", "在课程里写下笔记，让读过的内容与你有关。", "#library", "翻开书架")}<details class="source-panel"><summary>最近的作答记录</summary>${
       [
         ...state.learning.attempts,
         ...state.learning.openAttempts,
@@ -1238,7 +1285,7 @@ function myPage() {
             `<div><a href="${url(a.lessonId)}">${esc(meta(a.lessonId)?.title || a.lessonId)}</a><p>${esc(a.body || "选择 " + String.fromCharCode(65 + (a.choice || 0)))} ${a.correct === true ? "✓" : a.correct === false ? "· 可再复习" : ""}</p><small>${esc(a.createdAt?.slice(0, 10))}</small></div>`,
         )
         .join("") || "<p>尚无作答记录。</p>"
-    }</details><p class="quiet-note">网页版 1.23.1 · 内容源自 V1.23 · 自学练习答案随网页提供。</p>`;
+    }</details><p class="quiet-note">网页版 1.23.2 · 内容源自 V1.23 · 自学练习答案随网页提供。</p>`;
   bindNoteButtons();
 }
 function glossaryPage() {
