@@ -1,0 +1,5 @@
+const VERSION='wxgc-web-1.23.1-1';const base=new URL('./',self.location.href);
+self.addEventListener('install',event=>event.waitUntil(caches.open(VERSION).then(c=>c.addAll(['./','index.html','style.css','app.js','data/index.json','data/questions.json'].map(p=>new URL(p,base).href)))));
+self.addEventListener('message',e=>{if(e.data==='ACTIVATE')self.skipWaiting();});
+self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('wxgc-web-')&&k!==VERSION).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+self.addEventListener('fetch',event=>{const u=new URL(event.request.url);if(event.request.method!=='GET'||u.origin!==base.origin||!u.pathname.startsWith(base.pathname))return;event.respondWith((async()=>{const c=await caches.open(VERSION);try{const r=await fetch(event.request);if(r.ok&&r.type!=='opaque')await c.put(event.request,r.clone());return r;}catch(e){const hit=await c.match(event.request);if(hit)return hit;if(event.request.mode==='navigate')return c.match(new URL('index.html',base).href);throw e;}})());});

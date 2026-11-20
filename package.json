@@ -1,0 +1,20 @@
+{
+  "name": "wenxiang-guancha-web",
+  "version": "1.23.1",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/*.test.cjs",
+    "serve": "python3 -m http.server 4173 -d dist",
+    "test:browser": "node scripts/test-browser.cjs && node scripts/test-boundaries.cjs"
+  },
+  "dependencies": {
+    "@noble/hashes": "2.0.1",
+    "dompurify": "3.3.1",
+    "marked": "17.0.1"
+  },
+  "devDependencies": {
+    "esbuild": "0.27.0",
+    "playwright": "1.56.1"
+  }
+}
