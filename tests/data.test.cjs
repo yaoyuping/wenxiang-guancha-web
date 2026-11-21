@@ -231,3 +231,24 @@ test("unknown format and unsupported web version are rejected", () => {
   b.sha256 = d.hash(rest);
   assert.throws(() => model.previewImport(model.empty(), b));
 });
+test('book bibliography and object specifications survive editing and backup restore', () => {
+  let s = model.empty();
+  for (const item of [
+    {id:'book-test',kind:'book',name:'茶经',author:'陆羽',publisher:'测试出版社',edition:'校注本',isbn:'test-isbn',readingNotes:'读到第三章'},
+    {id:'ware-test',kind:'teaware',name:'盖碗',maker:'制作者',dimensions:'口径 9 cm',craft:'白瓷',capacity:'110'}
+  ]) s.collection = d.mutate(s.collection,{type:'itemSave',item,expectedVersion:0},uid(),at).data;
+  s.collection = d.mutate(s.collection,{type:'batchSave',batch:{id:'book-batch',itemId:'book-test',label:'入藏',quantity:'1',unit:'本'},expectedVersion:0},uid(),at).data;
+  const restored=model.previewImport(model.empty(),model.exportWeb(s)).state;
+  assert.equal(restored.collection.items.find(x=>x.id==='book-test').author,'陆羽');
+  assert.equal(restored.collection.items.find(x=>x.id==='book-test').readingNotes,'读到第三章');
+  assert.equal(restored.collection.items.find(x=>x.id==='ware-test').maker,'制作者');
+  assert.equal(restored.collection.batches[0].unit,'本');
+});
+test('article media catalogs contain only images used in that article',()=>{
+  const idx=JSON.parse(fs.readFileSync(path.join(__dirname,'../static/data/index.json')));
+  for(const entry of idx.entries){
+    const article=JSON.parse(fs.readFileSync(path.join(__dirname,'../static/data',entry.id+'.json')));
+    const body=article.sections.map(s=>s.markdown).join('\n');
+    for(const m of article.media||[]) assert(body.includes('(assets'+m.path+')'),entry.id+': '+m.id);
+  }
+});

@@ -1,19 +1,256 @@
 const field = (key, label, max = 2000) => ({ key, label, max });
-const common = [field('name', '名称（必填）', 120), field('category', '品类／形制', 100), field('rating', '个人评分 0～10（未知留空）', 4), field('claim', '商家宣称（不等同核验事实）', 3000), field('observation', '个人观察', 3000), field('verifiedFacts', '已核验资料', 3000), field('evidenceSource', '核验来源与定位', 3000), field('unknowns', '未知范围／尚待核验', 3000)];
-const incense = [field('nature', '天然单方／合香（未知留空）'), field('form', '形态'), field('processingSource', '加工依据与来源'), field('useMethods', '使用方法'), field('materialId', '来源材料档案编号（可留空，仅记录引用）'), field('formulaId', '来源配方编号（可留空，仅记录引用）'), field('species', '基源／物种'), field('part', '使用部位'), field('region', '产地'), field('processing', '加工'), field('extraction', '提取'), field('formula', '配方名'), field('ingredients', '原料、比例及处理说明（保留原量）'), field('maturation', '窖藏／熟成'), field('formulaSource', '配方来源'), field('formulaSteps', '配方工序'), field('reconstruction', '复原边界')];
-const tea = [field('topic', '茶品名／专题名'), field('region', '产区'), field('variety', '品种'), field('harvestYear', '采摘年份（四位数字）', 4), field('roasting', '焙火'), field('processes', '加工要点'), field('classificationBasis', '分类依据（生普指定基础茶类时必填）')];
-const equipment = [field('material', '材料'), field('capacity', '容量 ml（最多三位小数）', 20), field('purpose', '用途'), field('instructions', '使用说明')];
-const batch = [field('label', '批次标签（必填）', 120), field('seller', '商家', 300), field('price', '该批总价／人民币元（最多两位小数；未知留空）', 20), field('quantity', '购入数量（最多三位小数；留空=未登记，0=已登记为零）', 20), field('purchasedAt', '购入日期 YYYY-MM-DD', 10), field('storage', '存放位置', 300), field('storageNotes', '存放说明', 3000), field('claim', '商家证据宣称', 3000), field('verification', '核验状态：未核验／部分核验／已核验／存疑', 20), field('verificationNotes', '核验依据及边界', 3000)];
-const media = [field('capturedAt', '实际拍摄时间 YYYY-MM-DD，可附THH:mm；未知留空', 16), field('caption', '图片说明'), field('altText', '替代描述', 500), field('conditions', '拍摄条件'), field('creator', '作者', 500), field('license', '许可', 500), field('copyrightStatus', '版权核验状态／边界（未知留空）', 500), field('sourceUrl', '来源网址', 500), field('tags', '标签', 500)];
-const localFields = [field('acquiredAt','入藏日期',10),field('acquisitionSource','购自／获赠自',300),field('acquisitionPrice','入藏花费（元）',20),field('storageLocation','放在哪里',300)];
-function itemFields(kind, localMode = false) { return [...common, ...(kind === 'incense' ? incense : kind === 'tea' ? tea : ['equipment','teaware','incenseware'].includes(kind) ? equipment : equipment.filter(f => f.key !== 'capacity')), ...(localMode ? localFields : [])]; }
-const labels={category:'品类或器形',rating:'喜爱程度（0～10）',claim:'商家介绍',observation:'我的感受',verifiedFacts:'已查证的资料',evidenceSource:'资料出处',unknowns:'留待了解',nature:'香品性质',form:'形态',species:'植物来源',part:'取香部位',processing:'加工方式',capacity:'容量（ml）',harvestYear:'采摘年份',region:'产地',material:'材质',purpose:'用途',instructions:'使用与养护',classificationBasis:'茶类判断依据'};
-const hints={name:'如：春日龙井、檀香小片、白瓷盖碗',category:'如：龙井、檀香、盖碗',region:'照包装或已知信息填写',harvestYear:'如：2026',variety:'如：龙井43',roasting:'如：轻火，或按包装填写',form:'如：木片、香粉、线香',useMethods:'如：电炉温熏',material:'如：白瓷、紫砂、铜',capacity:'如：110',purpose:'如：泡茶、熏香',observation:'记下颜色、香气、口感或使用手感',rating:'留空也可以，0 不代表未填',acquiredAt:'选择日期',acquisitionSource:'店铺、朋友或入藏渠道',acquisitionPrice:'选填，按实际花费记录',storageLocation:'如：茶柜第二层',claim:'保留对方的说法',verifiedFacts:'只记已经查证的内容',evidenceSource:'书名页码、标签或其他可追溯出处'};
-function sections(kind,localMode,form={}) {
- const quick=kind==='tea'?['region','harvestYear','variety','roasting']:kind==='incense'?['nature','form','region','useMethods']:['material',...(['equipment','teaware','incenseware'].includes(kind)?['capacity']:[]),'purpose','instructions'];
- const groups=[{key:'usual',title:kind==='tea'?'这款茶':kind==='incense'?'这味香':'这件藏品',hint:'常用信息，知道多少记多少',keys:quick,open:true},{key:'feeling',title:'观察与喜爱',hint:'自己的感受',keys:['observation','rating'],open:false},...(localMode?[{key:'acquisition',title:'入藏与存放',hint:'来源、花费和位置',keys:localFields.map(x=>x.key),open:false}]:[]),{key:'research',title:'进阶资料',hint:'工艺、配方与考据',keys:[],open:false}];
- const allocated=new Set(['name','category',...groups.reduce((all,g)=>all.concat(g.keys),[])]),fields=itemFields(kind,localMode);
- groups[groups.length-1].keys=fields.filter(f=>!allocated.has(f.key)).map(f=>f.key);
- return groups.map(group=>({...group,fields:group.keys.map(key=>fields.find(f=>f.key===key)).filter(Boolean).map(f=>({...f,label:labels[f.key]||f.label,placeholder:hints[f.key]||'选填',type:['rating','capacity','acquisitionPrice'].includes(f.key)?'digit':f.key==='harvestYear'?'number':'text',multiline:['observation','instructions','useMethods','claim','verifiedFacts','evidenceSource','unknowns','ingredients','formulaSteps','reconstruction','processingSource','formulaSource'].includes(f.key),options:f.key==='nature'?['暂不填写','天然单方','合香']:null})),filled:group.keys.filter(key=>form[key]!=null&&form[key]!=='').length}));
+const common = [
+  field("name", "名称（必填）", 120),
+  field("category", "品类／形制", 100),
+  field("rating", "个人评分 0～10（未知留空）", 4),
+  field("claim", "商家宣称（不等同核验事实）", 3000),
+  field("observation", "个人观察", 3000),
+  field("verifiedFacts", "已核验资料", 3000),
+  field("evidenceSource", "核验来源与定位", 3000),
+  field("unknowns", "未知范围／尚待核验", 3000),
+];
+const incense = [
+  field("nature", "天然单方／合香（未知留空）"),
+  field("form", "形态"),
+  field("processingSource", "加工依据与来源"),
+  field("useMethods", "使用方法"),
+  field("materialId", "来源材料档案编号（可留空，仅记录引用）"),
+  field("formulaId", "来源配方编号（可留空，仅记录引用）"),
+  field("species", "基源／物种"),
+  field("part", "使用部位"),
+  field("region", "产地"),
+  field("processing", "加工"),
+  field("extraction", "提取"),
+  field("formula", "配方名"),
+  field("ingredients", "原料、比例及处理说明（保留原量）"),
+  field("maturation", "窖藏／熟成"),
+  field("formulaSource", "配方来源"),
+  field("formulaSteps", "配方工序"),
+  field("reconstruction", "复原边界"),
+];
+const tea = [
+  field("topic", "茶品名／专题名"),
+  field("region", "产区"),
+  field("variety", "品种"),
+  field("harvestYear", "采摘年份（四位数字）", 4),
+  field("roasting", "焙火"),
+  field("processes", "加工要点"),
+  field("classificationBasis", "分类依据（生普指定基础茶类时必填）"),
+];
+const equipment = [
+  field("material", "材料"),
+  field("capacity", "容量 ml（最多三位小数）", 20),
+  field("purpose", "用途"),
+  field("instructions", "使用说明"),
+];
+const book = [
+  field("author", "作者／编者"),
+  field("publisher", "出版社"),
+  field("publicationYear", "出版年份"),
+  field("edition", "版次／版本"),
+  field("isbn", "ISBN"),
+  field("translator", "译者"),
+  field("readingStatus", "阅读状态"),
+  field("readingNotes", "阅读记录"),
+];
+const objectFields = [
+  field("maker", "作者／品牌"),
+  field("dimensions", "尺寸／规格"),
+  field("craft", "工艺"),
+];
+const batch = [
+  field("label", "批次标签（必填）", 120),
+  field("seller", "商家", 300),
+  field("price", "该批总价／人民币元（最多两位小数；未知留空）", 20),
+  field("quantity", "购入数量（最多三位小数；留空=未登记，0=已登记为零）", 20),
+  field("purchasedAt", "购入日期 YYYY-MM-DD", 10),
+  field("storage", "存放位置", 300),
+  field("storageNotes", "存放说明", 3000),
+  field("claim", "商家证据宣称", 3000),
+  field("verification", "核验状态：未核验／部分核验／已核验／存疑", 20),
+  field("verificationNotes", "核验依据及边界", 3000),
+];
+const media = [
+  field("capturedAt", "实际拍摄时间 YYYY-MM-DD，可附THH:mm；未知留空", 16),
+  field("caption", "图片说明"),
+  field("altText", "替代描述", 500),
+  field("conditions", "拍摄条件"),
+  field("creator", "作者", 500),
+  field("license", "许可", 500),
+  field("copyrightStatus", "版权核验状态／边界（未知留空）", 500),
+  field("sourceUrl", "来源网址", 500),
+  field("tags", "标签", 500),
+];
+const localFields = [
+  field("acquiredAt", "入藏日期", 10),
+  field("acquisitionSource", "购自／获赠自", 300),
+  field("acquisitionPrice", "入藏花费（元）", 20),
+  field("storageLocation", "放在哪里", 300),
+];
+function itemFields(kind, localMode = false) {
+  return [
+    ...common,
+    ...(kind === "incense"
+      ? incense
+      : kind === "tea"
+        ? tea
+        : ["equipment", "teaware", "incenseware"].includes(kind)
+          ? [...equipment, ...objectFields]
+          : kind === "book"
+            ? book
+            : equipment.filter((f) => f.key !== "capacity")),
+    ...(localMode ? localFields : []),
+  ];
+}
+const labels = {
+  category: "品类或器形",
+  rating: "喜爱程度（0～10）",
+  claim: "商家介绍",
+  observation: "我的感受",
+  verifiedFacts: "已查证的资料",
+  evidenceSource: "资料出处",
+  unknowns: "留待了解",
+  nature: "香品性质",
+  form: "形态",
+  species: "植物来源",
+  part: "取香部位",
+  processing: "加工方式",
+  capacity: "容量（ml）",
+  harvestYear: "采摘年份",
+  region: "产地",
+  material: "材质",
+  purpose: "用途",
+  instructions: "使用与养护",
+  classificationBasis: "茶类判断依据",
+};
+const hints = {
+  name: "如：春日龙井、檀香小片、白瓷盖碗",
+  category: "如：龙井、檀香、盖碗",
+  region: "照包装或已知信息填写",
+  harvestYear: "如：2026",
+  variety: "如：龙井43",
+  roasting: "如：轻火，或按包装填写",
+  form: "如：木片、香粉、线香",
+  useMethods: "如：电炉温熏",
+  material: "如：白瓷、紫砂、铜",
+  capacity: "如：110",
+  purpose: "如：泡茶、熏香",
+  observation: "记下颜色、香气、口感或使用手感",
+  rating: "留空也可以，0 不代表未填",
+  acquiredAt: "选择日期",
+  acquisitionSource: "店铺、朋友或入藏渠道",
+  acquisitionPrice: "选填，按实际花费记录",
+  storageLocation: "如：茶柜第二层",
+  claim: "保留对方的说法",
+  verifiedFacts: "只记已经查证的内容",
+  evidenceSource: "书名页码、标签或其他可追溯出处",
+};
+function sections(kind, localMode, form = {}) {
+  const quick =
+    kind === "tea"
+      ? ["region", "harvestYear", "variety", "roasting"]
+      : kind === "incense"
+        ? ["nature", "form", "region", "useMethods"]
+        : kind === "book"
+          ? book.map((f) => f.key)
+          : [
+              "material",
+              "maker",
+              "dimensions",
+              "craft",
+              ...(["equipment", "teaware", "incenseware"].includes(kind)
+                ? ["capacity"]
+                : []),
+              "purpose",
+              "instructions",
+            ];
+  const groups = [
+    {
+      key: "usual",
+      title:
+        kind === "tea"
+          ? "这款茶"
+          : kind === "incense"
+            ? "这味香"
+            : kind === "book"
+              ? "这本书"
+              : kind === "teaware"
+                ? "这件茶器"
+                : kind === "incenseware"
+                  ? "这件香器"
+                  : "这件器物",
+      hint: "常用信息，知道多少记多少",
+      keys: quick,
+      open: true,
+    },
+    {
+      key: "feeling",
+      title: "观察与喜爱",
+      hint: "自己的感受",
+      keys: ["observation", "rating"],
+      open: false,
+    },
+    ...(localMode
+      ? [
+          {
+            key: "acquisition",
+            title: "入藏与存放",
+            hint: "来源、花费和位置",
+            keys: localFields.map((x) => x.key),
+            open: false,
+          },
+        ]
+      : []),
+    {
+      key: "research",
+      title: "进阶资料",
+      hint: "工艺、配方与考据",
+      keys: [],
+      open: false,
+    },
+  ];
+  const allocated = new Set([
+      "name",
+      "category",
+      ...groups.reduce((all, g) => all.concat(g.keys), []),
+    ]),
+    fields = itemFields(kind, localMode);
+  groups[groups.length - 1].keys = fields
+    .filter((f) => !allocated.has(f.key))
+    .map((f) => f.key);
+  return groups.map((group) => ({
+    ...group,
+    fields: group.keys
+      .map((key) => fields.find((f) => f.key === key))
+      .filter(Boolean)
+      .map((f) => ({
+        ...f,
+        label: labels[f.key] || f.label,
+        placeholder: hints[f.key] || "选填",
+        type: ["rating", "capacity", "acquisitionPrice"].includes(f.key)
+          ? "digit"
+          : f.key === "harvestYear"
+            ? "number"
+            : "text",
+        multiline: [
+          "observation",
+          "instructions",
+          "useMethods",
+          "claim",
+          "verifiedFacts",
+          "evidenceSource",
+          "unknowns",
+          "ingredients",
+          "formulaSteps",
+          "reconstruction",
+          "processingSource",
+          "formulaSource",
+          "readingNotes",
+        ].includes(f.key),
+        options: f.key === "nature" ? ["暂不填写", "天然单方", "合香"] : null,
+      })),
+    filled: group.keys.filter((key) => form[key] != null && form[key] !== "")
+      .length,
+  }));
 }
 module.exports = { itemFields, sections, batch, media };

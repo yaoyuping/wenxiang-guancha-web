@@ -32,6 +32,7 @@ const entries = [],
 function add(c) {
   if (entries.some((x) => x.id === c.id)) throw Error("duplicate " + c.id);
   c.hero =
+    require("../static/data/atlas-covers.json")[c.id] ||
     art.get(c.id)?.path ||
     "/images/handpainted/" +
       (c.series === "tea" ? "tea-sprig" : "incense-burner") +
@@ -96,7 +97,7 @@ for (const p of idx.packages) {
       group: "curriculum",
       sections,
       sources: b.sources.filter((s) => c.source_ids.includes(s.id)),
-      media,
+      media: media.filter(m => sections.some(s => s.markdown.includes("(assets" + m.path + ")"))),
       questionIds: b.questions
         .filter((q) => q.lesson_id === c.id)
         .map((q) => q.id),

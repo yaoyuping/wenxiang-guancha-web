@@ -48,3 +48,7 @@ GitHub Pages 仅提供静态内容。个人资料保留在浏览器，不提供�
 提交 `2302582` 的 [GitHub Actions 运行](https://github.com/yaoyuping/wenxiang-guancha-web/actions/runs/44730611775) 已完成 `npm ci`、`npm test`、`npm run build`、Pages 配置、构建产物上传与正式发布，build 和 deploy 均为 success。Pages Source 为 GitHub Actions，强制 HTTPS 已启用。
 
 补充验证：以 `/wenxiang-guancha-web/` 仓库子路径启动相同构建产物，文章直达链接、相对图片路径、刷新和 Service Worker 注册均通过。当前执行环境的网络策略拒绝直接访问 github.io，线上发布成功依据 GitHub 部署记录，未将本机验证表述为线上浏览器验证。
+
+## 1.23.3 内容与阅读修正
+
+11 项单元测试通过，新增书籍／器物字段与「本」单位备份恢复、每课图片来源范围验证。浏览器原有全流程测试通过；补充验证书籍保存／重新编辑、手机章节切换与目录跳转、手机／桌面切换、第一课配图来源 6 张、首页重复入口移除。64 篇图鉴封面文件内容哈希均不相同，沿用已有课程的主题图片。检查 320／390 像素阅读布局及截图；未进行 iPhone 真机验收。

@@ -2191,3 +2191,60 @@ dialog::backdrop {
     transition: none !important;
   }
 }
+/* Mobile chapter reading keeps the original section images with their text. */
+[hidden] {
+  display: none !important;
+}
+.chapter-menu,
+.chapter-status,
+.chapter-controls {
+  display: none;
+}
+@media (max-width: 760px) {
+  .chapter-menu {
+    display: block;
+    margin: 18px 0;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--soft);
+    padding: 12px;
+  }
+  .chapter-menu summary {
+    min-height: 36px;
+    cursor: pointer;
+  }
+  .chapter-menu nav {
+    display: grid;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .chapter-menu button {
+    text-align: left;
+    justify-content: flex-start;
+    font-size: 13px;
+  }
+  .chapter-menu button[aria-current="step"] {
+    background: var(--green);
+    color: white;
+  }
+  .chapter-status {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 18px;
+  }
+  .chapter-controls {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 24px 0;
+  }
+  .chapter-controls button {
+    flex: 1;
+  }
+  .article-body > section {
+    scroll-margin-top: 18px;
+  }
+}

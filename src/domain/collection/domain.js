@@ -4,7 +4,7 @@ const knowledge = require('../data/knowledge-index.json');
 const TABLES = ['items', 'batches', 'transactions', 'attachments', 'links'];
 const LIMITS = { items: 500, batches: 1500, transactions: 6000, attachments: 500, links: 1000 };
 const MAX_BYTES = 2400000;
-const UNITS = ['g', '枚', '件', '支', 'ml'];
+const UNITS = ['g', '枚', '件', '支', 'ml', '本'];
 const KINDS = ['incense', 'tea', 'equipment', 'teaware', 'incenseware', 'book', 'other'];
 const FORMAT = 'WENXIANG_GUANCHA_COLLECTION_V3';
 function fail(message) { const e = new Error(message); e.publicMessage = message; throw e; }
@@ -54,7 +54,7 @@ function itemFields(input) {
     const k = knowledge.find(x => x.id === row.knowledgeId && x.version === row.knowledgeVersion);
     if (!k || (['incense', 'tea'].includes(row.kind) && k.kind !== row.kind)) fail('百科ID、类型或版本不匹配');
   } else if (row.knowledgeVersion !== null) fail('百科版本需要对应ID');
-  const fields = row.kind === 'incense' ? ['form', 'processingSource', 'useMethods', 'materialId', 'formulaId', 'species', 'part', 'region', 'processing', 'extraction', 'formula', 'ingredients', 'maturation', 'formulaSource', 'formulaSteps', 'reconstruction'] : row.kind === 'tea' ? ['topic', 'classificationBasis', 'variety', 'region', 'roasting', 'processes'] : ['material', 'purpose', 'instructions'];
+  const fields = row.kind === 'incense' ? ['form', 'processingSource', 'useMethods', 'materialId', 'formulaId', 'species', 'part', 'region', 'processing', 'extraction', 'formula', 'ingredients', 'maturation', 'formulaSource', 'formulaSteps', 'reconstruction'] : row.kind === 'tea' ? ['topic', 'classificationBasis', 'variety', 'region', 'roasting', 'processes'] : row.kind === 'book' ? ['author', 'publisher', 'publicationYear', 'edition', 'isbn', 'translator', 'readingStatus', 'readingNotes', 'material', 'purpose', 'instructions'] : ['material', 'purpose', 'instructions', 'maker', 'dimensions', 'craft'];
   for (const key of fields) row[key] = text(input[key], 2000);
   if (row.kind === 'incense') row.nature = choice(input.nature, ['', '天然单方', '合香'], '');
   if (row.kind === 'tea') {

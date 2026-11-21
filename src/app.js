@@ -137,7 +137,7 @@ function blank(title, text, action = "") {
 function card(e) {
   const done =
     state.learning.progress[e.id]?.read || state.extra.progress[e.id]?.read;
-  return `<a class="content-card" href="${url(e.id)}"><div class="card-art"><img src="${asset(e.hero)}" alt="${esc(e.title)} · 手绘意象" loading="lazy"></div><div class="card-body"><div class="eyebrow">${e.kind === "atlas" ? "图鉴" : e.id.includes("REVIEW") ? "单元回顾" : label[e.series] + "学"}${done ? " · 已读" : ""}</div><h3>${esc(e.title)}</h3><p>${esc(e.summary?.replace(/!\[.*?\]\(.*?\)/g, "").slice(0, 65) || "慢慢读，细细观。")}</p><span class="card-link">打开阅读 <span>↗</span></span></div></a>`;
+  return `<a class="content-card" href="${url(e.id)}"><div class="card-art"><img src="${asset(e.hero)}" alt="${esc(e.title)} · 配图" loading="lazy"></div><div class="card-body"><div class="eyebrow">${e.kind === "atlas" ? "图鉴" : e.id.includes("REVIEW") ? "单元回顾" : label[e.series] + "学"}${done ? " · 已读" : ""}</div><h3>${esc(e.title)}</h3><p>${esc(e.summary?.replace(/!\[.*?\]\(.*?\)/g, "").slice(0, 65) || "慢慢读，细细观。")}</p><span class="card-link">打开阅读 <span>↗</span></span></div></a>`;
 }
 function sectionHead(kicker, title, sub = "", right = "") {
   return `<div class="section-heading"><div><div class="eyebrow">${esc(kicker)}</div><h1>${esc(title)}</h1>${sub ? `<p>${esc(sub)}</p>` : ""}</div>${right}</div>`;
@@ -174,7 +174,7 @@ function shell() {
     navigate("#search/" + encodeURIComponent(new FormData(e.target).get("q")));
   };
   $("#sidebar").innerHTML =
-    `<div class="sidebar-label">香 茶 书 房</div>${nav.map(([p, n]) => `<a href="#${p}" class="${current === p ? "active" : ""}"><span>${n}</span><span>↗</span></a>`).join("")}<div class="sidebar-foot"><p>静坐听风<br>闲来闻香</p><small>网页版 1.23.2<br>资料与时光，留在身边。</small><a href="#backup">备份与恢复 →</a></div>`;
+    `<div class="sidebar-label">香 茶 书 房</div>${nav.map(([p, n]) => `<a href="#${p}" class="${current === p ? "active" : ""}"><span>${n}</span><span>↗</span></a>`).join("")}<div class="sidebar-foot"><p>静坐听风<br>闲来闻香</p><small>网页版 1.23.3<br>资料与时光，留在身边。</small><a href="#backup">备份与恢复 →</a></div>`;
   $("#mobile-nav").innerHTML = [
     ["home", "书房", "books"],
     ["tea", "茶学", "tea-sprig"],
@@ -207,9 +207,9 @@ async function home() {
     <div class="section-heading small"><div><div class="eyebrow">书 房 小 事</div><h2>喜欢的，都有安放处</h2></div></div>${functionCards(
       [
         ["#atlas", "草木图鉴", "认一味香，识一片叶", "tea-sprig"],
-        ["#collection", "我的珍藏", "为茶、香与器物建档", "storage"],
+        ["#glossary", "术语索引", "读懂草木与器物的名字", "tea-canon"],
+
         ["#review", "复习与进阶", "温故一遍，再读深一些", "tea-assessment"],
-        ["#backup", "备份与恢复", "把记录妥善留住", "books"],
       ],
     )}<p class="quiet-note">个人记录仅存于当前浏览器。建议定期到「备份与恢复」下载备份，换设备时再导入。</p>`;
 }
@@ -263,6 +263,24 @@ async function article(id, token) {
     articleCache.set(id, e);
   }
   if (token !== routeToken) return;
+  const bodyImages = new Set(
+    [
+      ...e.sections
+        .map((s) => s.markdown)
+        .join("\n")
+        .matchAll(/!\[[^\]]*\]\(([^\s)]+)/g),
+    ].map((m) => m[1]),
+  );
+  const seenMedia = new Set();
+  e = {
+    ...e,
+    media: (e.media || []).filter((m) => {
+      const path = asset(m.path);
+      if (!bodyImages.has(path) || seenMedia.has(path)) return false;
+      seenMedia.add(path);
+      return true;
+    }),
+  };
   const bookmarked = [
     ...state.learning.bookmarks,
     ...state.learning.referenceBookmarks,
@@ -270,7 +288,7 @@ async function article(id, token) {
   ].includes(id);
   const read =
     state.learning.progress[id]?.read || state.extra.progress[id]?.read;
-  main.innerHTML = `<div class="reading-top"><a class="back" href="${e.unitId && index.units.some((u) => u.id === e.unitId) ? "#unit/" + e.unitId : "#library"}">← 返回目录</a><div class="button-row"><button id="bookmark">${bookmarked ? "已收藏 ★" : "收藏 ☆"}</button><button id="font-size" aria-label="调整字号">字号 A+</button></div></div><div class="reading-layout"><article class="article"><header class="article-heading"><div class="eyebrow">${e.group === "curriculum" ? "香茶课程" : "资料书架"} / ${esc(e.id)}</div><h1>${esc(e.title)}</h1><p>${badge(label[e.series] + "学")}${badge(e.kind === "atlas" ? "图鉴" : "阅读")}${badge(read ? "已读" : "待细读")}</p></header>${e.learning_objectives?.length ? `<details class="objectives"><summary>这一课，带着这些问题读</summary>${html(e.learning_objectives.map((x) => "- " + x).join("\n"))}</details>` : ""}<div class="article-body">${e.sections.map((s, i) => `<section id="section-${i}">${html(s.markdown)}</section>`).join("")}</div>${e.media?.length ? `<details class="source-panel"><summary>配图来源与说明（${e.media.length}）</summary>${e.media.map((m) => `<div><h4>${esc(m.title || m.alt)}</h4>${m.path ? `<img class="source-thumb" src="${asset(m.path)}" alt="${esc(m.title || m.alt)}" loading="lazy">` : ""}<p>${esc(m.caption || "")}</p><small>${esc([m.author || m.creator, m.license, m.changes || m.display_changes].filter(Boolean).join(" · "))}</small>${safeLink(m.source_url || m.sourceUrl, "来源页面")}</div>`).join("")}</details>` : ""}<details class="source-panel"><summary>本篇出处与阅读边界</summary>${(e.sources || []).map((s) => `<div><h4>${esc(s.book_title || s.title || s.id)}</h4><p>${esc(typeof s.locator === "object" ? JSON.stringify(s.locator) : s.locator || s.anchor || "")}</p><p>${esc(s.distinction || s.limits || s.supports || "")}</p>${safeLink(s.url || s.source_url, "查阅来源")}</div>`).join("") || "<p>沿用原课程的正文及出处标记，未新增书目核验。</p>"}${e.publication_state || e.review_status ? `<p class="muted">原稿状态：${esc(e.publication_state || e.review_status)}</p>` : ""}</details><div class="reading-actions"><button class="primary" id="mark-read">${read ? "标记为未读" : "已读，留下进度 ✓"}</button>${e.questionIds?.length ? `<a class="button" href="#quiz/${encodeURIComponent(id)}">课后练习 · ${e.questionIds.length} 题</a>` : ""}<button id="add-note">写一则笔记</button></div><section class="article-notes"><h2>我的读书笔记</h2>${notesFor(id)}</section></article><aside class="toc"><div class="eyebrow">本 篇 目 录</div>${e.sections.map((s, i) => `<button data-section="${i}">${esc(s.heading || "正文")}</button>`).join("")}<span class="muted">原文与配图沿用 V1.23</span></aside></div>`;
+  main.innerHTML = `<div class="reading-top"><a class="back" href="${e.unitId && index.units.some((u) => u.id === e.unitId) ? "#unit/" + e.unitId : "#library"}">← 返回目录</a><div class="button-row"><button id="bookmark">${bookmarked ? "已收藏 ★" : "收藏 ☆"}</button><button id="font-size" aria-label="调整字号">字号 A+</button></div></div><div class="reading-layout"><article class="article"><header class="article-heading"><div class="eyebrow">${e.group === "curriculum" ? "香茶课程" : "资料书架"} / ${esc(e.id)}</div><h1>${esc(e.title)}</h1><p>${badge(label[e.series] + "学")}${badge(e.kind === "atlas" ? "图鉴" : "阅读")}${badge(read ? "已读" : "待细读")}</p></header>${e.learning_objectives?.length ? `<details class="objectives"><summary>这一课，带着这些问题读</summary>${html(e.learning_objectives.map((x) => "- " + x).join("\n"))}</details>` : ""}<details class="chapter-menu"><summary>章节目录 · ${e.sections.length} 节</summary><nav aria-label="本课章节">${e.sections.map((s, i) => `<button data-chapter="${i}">${i + 1}. ${esc(s.heading || "正文")}</button>`).join("")}</nav></details><div class="chapter-status" aria-live="polite"></div><div class="article-body">${e.sections.map((s, i) => `<section id="section-${i}">${html(s.markdown)}</section>`).join("")}</div><div class="chapter-controls"><button id="previous-chapter">← 上一节</button><button id="next-chapter">下一节 →</button></div>${e.media?.length ? `<details class="source-panel"><summary>配图来源与说明（${e.media.length}）</summary>${e.media.map((m) => `<div><h4>${esc(m.title || m.alt)}</h4>${m.path ? `<img class="source-thumb" src="${asset(m.path)}" alt="${esc(m.title || m.alt)}" loading="lazy">` : ""}<p>${esc(m.caption || "")}</p><small>${esc([m.author || m.creator, m.license, m.changes || m.display_changes].filter(Boolean).join(" · "))}</small>${safeLink(m.source_url || m.sourceUrl, "来源页面")}</div>`).join("")}</details>` : ""}<details class="source-panel"><summary>本篇出处与阅读边界</summary>${(e.sources || []).map((s) => `<div><h4>${esc(s.book_title || s.title || s.id)}</h4><p>${esc(typeof s.locator === "object" ? JSON.stringify(s.locator) : s.locator || s.anchor || "")}</p><p>${esc(s.distinction || s.limits || s.supports || "")}</p>${safeLink(s.url || s.source_url, "查阅来源")}</div>`).join("") || "<p>沿用原课程的正文及出处标记，未新增书目核验。</p>"}${e.publication_state || e.review_status ? `<p class="muted">原稿状态：${esc(e.publication_state || e.review_status)}</p>` : ""}</details><div class="reading-actions"><button class="primary" id="mark-read">${read ? "标记为未读" : "已读，留下进度 ✓"}</button>${e.questionIds?.length ? `<a class="button" href="#quiz/${encodeURIComponent(id)}">课后练习 · ${e.questionIds.length} 题</a>` : ""}<button id="add-note">写一则笔记</button></div><section class="article-notes"><h2>我的读书笔记</h2>${notesFor(id)}</section></article><aside class="toc"><div class="eyebrow">本 篇 目 录</div>${e.sections.map((s, i) => `<button data-section="${i}">${esc(s.heading || "正文")}</button>`).join("")}<span class="muted">原文与配图沿用 V1.23</span></aside></div>`;
   $(".article-body")
     .querySelectorAll("img")
     .forEach((img) => {
@@ -285,14 +303,38 @@ async function article(id, token) {
     a.target = "_blank";
     a.rel = "noopener noreferrer";
   });
-  $$("[data-section]", main).forEach(
+  let chapter = 0;
+  const mobileReading = matchMedia("(max-width: 760px)");
+  const showChapter = (next, scroll = true) => {
+    chapter = Math.max(0, Math.min(next, e.sections.length - 1));
+    $$(".article-body > section").forEach((section, i) => {
+      section.hidden = mobileReading.matches && i !== chapter;
+    });
+    $(".chapter-status").textContent =
+      `${chapter + 1} / ${e.sections.length} · ${e.sections[chapter]?.heading || "正文"}`;
+    $("#previous-chapter").disabled = chapter === 0;
+    $("#next-chapter").disabled = chapter === e.sections.length - 1;
+    $$("[data-chapter]").forEach((b) =>
+      b.setAttribute(
+        "aria-current",
+        Number(b.dataset.chapter) === chapter ? "step" : "false",
+      ),
+    );
+    if (scroll) $("#section-" + chapter).scrollIntoView({ block: "start" });
+  };
+  $$("[data-chapter], [data-section]").forEach(
     (b) =>
-      (b.onclick = () =>
-        $("#section-" + b.dataset.section).scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        })),
+      (b.onclick = () => {
+        $(".chapter-menu").open = false;
+        showChapter(Number(b.dataset.chapter ?? b.dataset.section));
+      }),
   );
+  $("#previous-chapter").onclick = () => showChapter(chapter - 1);
+  $("#next-chapter").onclick = () => showChapter(chapter + 1);
+  mobileReading.addEventListener("change", () => {
+    if (token === routeToken) showChapter(chapter, false);
+  });
+  showChapter(0, false);
   $("#font-size").onclick = () => {
     $(".article").classList.toggle("large-type");
   };
@@ -599,7 +641,7 @@ function itemForm(row, kind) {
   const groups = forms.sections(kind, false, input);
   modal(
     row ? "编辑珍藏" : "添一件" + label[kind],
-    `<form>${field("name", "名称", row?.name, { required: true, max: 120 })}${field("category", "品类或器形", row?.category)}${groups
+    `<form>${field("name", kind === "book" ? "书名" : "名称", row?.name, { required: true, max: 120 })}${field("category", kind === "book" ? "书籍类别" : ["equipment", "teaware", "incenseware"].includes(kind) ? "器形／器物类别" : "品类", row?.category)}${groups
       .map(
         (g) =>
           `<details ${g.open ? "open" : ""}><summary>${esc(g.title)}</summary><div class="form-grid">${g.fields
@@ -695,7 +737,7 @@ function batchForm(item, row) {
   };
   modal(
     row ? "编辑批次" : "登记新批次",
-    `<form><div class="form-grid">${forms.batch.map((f) => field(f.key, f.label, input[f.key], { required: f.key === "label", readonly: !!row && f.key === "quantity", multiline: ["storageNotes", "claim", "verificationNotes"].includes(f.key), ...(f.key === "verification" ? { choices: ["未核验", "部分核验", "已核验", "存疑"].map((x) => [x, x]) } : {}) })).join("")}${field("unit", "单位", row?.unit || "g", { choices: d.UNITS.map((x) => [x, x]), readonly: !!row })}</div><p class="muted">入库数量一旦保存，通过库存流水调整；留空代表未知，0 代表已知为零。</p><button class="primary" type="submit">保存批次</button></form>`,
+    `<form><div class="form-grid">${forms.batch.map((f) => field(f.key, f.label, input[f.key], { required: f.key === "label", readonly: !!row && f.key === "quantity", multiline: ["storageNotes", "claim", "verificationNotes"].includes(f.key), ...(f.key === "verification" ? { choices: ["未核验", "部分核验", "已核验", "存疑"].map((x) => [x, x]) } : {}) })).join("")}${field("unit", "单位", row?.unit || (item.kind === "book" ? "本" : ["equipment", "teaware", "incenseware"].includes(item.kind) ? "件" : "g"), { choices: d.UNITS.map((x) => [x, x]), readonly: !!row })}</div><p class="muted">入库数量一旦保存，通过库存流水调整；留空代表未知，0 代表已知为零。</p><button class="primary" type="submit">保存批次</button></form>`,
   );
   bindForm(async (v) => {
     await commit((s) => {
@@ -1285,7 +1327,7 @@ function myPage() {
             `<div><a href="${url(a.lessonId)}">${esc(meta(a.lessonId)?.title || a.lessonId)}</a><p>${esc(a.body || "选择 " + String.fromCharCode(65 + (a.choice || 0)))} ${a.correct === true ? "✓" : a.correct === false ? "· 可再复习" : ""}</p><small>${esc(a.createdAt?.slice(0, 10))}</small></div>`,
         )
         .join("") || "<p>尚无作答记录。</p>"
-    }</details><p class="quiet-note">网页版 1.23.2 · 内容源自 V1.23 · 自学练习答案随网页提供。</p>`;
+    }</details><p class="quiet-note">网页版 1.23.3 · 内容源自 V1.23 · 自学练习答案随网页提供。</p>`;
   bindNoteButtons();
 }
 function glossaryPage() {
